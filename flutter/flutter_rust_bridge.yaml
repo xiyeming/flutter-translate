@@ -1,0 +1,4 @@
+rust_input: crate::ffi::bridge
+rust_root: ../native
+dart_output: lib/src/rust
+dart_entrypoint_class_name: RustLib

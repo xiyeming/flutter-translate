@@ -1,0 +1,33 @@
+# Rust
+target/
+# native/Cargo.lock is committed (binary project)
+
+# Flutter
+flutter/.dart_tool/
+flutter/build/
+flutter/.flutter-plugins
+flutter/.flutter-plugins-dependencies
+flutter/pubspec.lock
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+build/
+
+# Secrets / env
+.env
+*.pem
+*.key
+
+# Generated
+**/*.freezed.dart
+**/*.g.dart
