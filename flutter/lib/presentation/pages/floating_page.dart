@@ -527,20 +527,20 @@ class _PromptManagerSheetState extends State<_PromptManagerSheet> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (!t.isActive)
-                    GestureDetector(
+                    InkWell(
                       onTap: () async { await widget.onActivate(t.id); if (mounted) Navigator.pop(context, true); },
-                      child: Padding(padding: const EdgeInsets.all(6), child: Icon(Icons.check_circle_outline, size: 18, color: theme.colorScheme.primary)),
+                      child: Padding(padding: const EdgeInsets.all(4), child: Icon(Icons.check_circle_outline, size: 20, color: theme.colorScheme.primary)),
                     ),
-                  GestureDetector(
+                  InkWell(
                     onTap: () => _addOrEdit(existing: t),
-                    child: const Padding(padding: EdgeInsets.all(6), child: Icon(Icons.edit, size: 18)),
+                    child: const Padding(padding: EdgeInsets.all(4), child: Icon(Icons.edit, size: 20)),
                   ),
-                  GestureDetector(
+                  InkWell(
                     onTap: () async {
                       final confirm = await showDialog<bool>(context: context, builder: (c) => AlertDialog(title: const Text('确认删除'), content: Text('删除 "${t.name}"？'), actions: [TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('取消')), FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('删除'))]));
                       if (confirm == true) { await widget.onDelete(t.id); if (mounted) Navigator.pop(context, true); }
                     },
-                    child: Padding(padding: const EdgeInsets.all(6), child: Icon(Icons.delete_outline, size: 18, color: theme.colorScheme.error)),
+                    child: Padding(padding: const EdgeInsets.all(4), child: Icon(Icons.delete_outline, size: 20, color: theme.colorScheme.error)),
                   ),
                 ],
               ),
