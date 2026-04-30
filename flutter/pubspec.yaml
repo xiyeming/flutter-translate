@@ -1,7 +1,7 @@
 name: flutter_translate
 description: "AI 翻译桌面工具"
 publish_to: 'none'
-version: 0.1.0
+version: 1.0.0
 
 environment:
   sdk: '>=3.9.2 <4.0.0'

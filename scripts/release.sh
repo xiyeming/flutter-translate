@@ -7,7 +7,7 @@ NATIVE_DIR="$PROJECT_DIR/native"
 BUILD_DIR="$PROJECT_DIR/build"
 APP_NAME="xym_ft"
 APP_ID="com.xym.ft"
-VERSION=$(date +%Y.%m.%d)
+VERSION=$(grep '^version' "$NATIVE_DIR/Cargo.toml" | head -1 | sed 's/.*"\(.*\)"/\1/')
 OUTPUT="$BUILD_DIR/$APP_NAME-v$VERSION-x86_64.AppImage"
 
 echo "=== $APP_NAME Release Build v$VERSION ==="
