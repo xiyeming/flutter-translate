@@ -150,7 +150,8 @@ class _ProviderSettingsTabState extends ConsumerState<_ProviderSettingsTab> {
 
   Widget _buildProviderCard(BuildContext context, ProviderConfig p) {
     final isConfigured = _providers.any((s) => s.id == p.id && s.apiKey != null && s.apiKey!.isNotEmpty);
-    final isActive = _providers.any((s) => s.id == p.id && s.isActive);
+    final saved = _providers.where((s) => s.id == p.id).firstOrNull;
+    final isActive = saved?.isActive ?? p.isActive;
     const icons = <String, IconData>{
       'openai': Icons.auto_awesome, 'deepl': Icons.translate, 'google': Icons.cloud,
       'qwen': Icons.auto_awesome, 'deepseek': Icons.auto_awesome, 'kimi': Icons.auto_awesome,
@@ -184,7 +185,7 @@ class _ProviderSettingsTabState extends ConsumerState<_ProviderSettingsTab> {
           ),
           Switch(
             value: isActive,
-            onChanged: isConfigured ? (_) => _toggleActive(p) : null,
+            onChanged: (_) => _toggleActive(p),
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
           const SizedBox(width: 4),

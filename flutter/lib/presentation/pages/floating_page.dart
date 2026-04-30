@@ -115,6 +115,7 @@ class _FloatingPageState extends ConsumerState<FloatingPage> {
           _providers[p.id] = p.name;
           if (p.isActive) _activeProviderIds.add(p.id);
         }
+        if (providers.isEmpty) _activeProviderIds.addAll(_providers.keys);
       });
     } catch (_) {}
     try {
