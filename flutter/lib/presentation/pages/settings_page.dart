@@ -91,6 +91,19 @@ class _ProviderSettingsTabState extends ConsumerState<_ProviderSettingsTab> {
     }
   }
 
+  Future<void> _toggleActive(ProviderConfig p) async {
+    final newActive = !p.isActive;
+    setState(() {
+      final idx = _providers.indexWhere((x) => x.id == p.id);
+      if (idx >= 0) _providers[idx] = p.copyWith(isActive: newActive);
+      else {
+        _providers.add(p.copyWith(isActive: newActive, createdAt: DateTime.now()));
+      }
+    });
+    final ffi = FfiDatasource();
+    await ffi.saveProvider(p.copyWith(isActive: newActive));
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -137,6 +150,7 @@ class _ProviderSettingsTabState extends ConsumerState<_ProviderSettingsTab> {
 
   Widget _buildProviderCard(BuildContext context, ProviderConfig p) {
     final isConfigured = _providers.any((s) => s.id == p.id && s.apiKey != null && s.apiKey!.isNotEmpty);
+    final isActive = _providers.any((s) => s.id == p.id && s.isActive);
     const icons = <String, IconData>{
       'openai': Icons.auto_awesome, 'deepl': Icons.translate, 'google': Icons.cloud,
       'qwen': Icons.auto_awesome, 'deepseek': Icons.auto_awesome, 'kimi': Icons.auto_awesome,
@@ -154,6 +168,11 @@ class _ProviderSettingsTabState extends ConsumerState<_ProviderSettingsTab> {
             children: [
               Icon(Icons.circle, size: 10, color: isConfigured ? Colors.green : Colors.grey),
               const SizedBox(width: 8),
+              Switch(
+                value: isActive,
+                onChanged: isConfigured ? (_) => _toggleActive(p) : null,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
               const Icon(Icons.chevron_right),
             ],
           ),
