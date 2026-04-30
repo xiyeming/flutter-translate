@@ -355,7 +355,8 @@ class _FloatingPageState extends ConsumerState<FloatingPage> {
   }
 
   Widget _buildProviderPanel(ThemeData theme) {
-    final entries = _providers.entries.where((e) => _activeProviderIds.contains(e.key)).toList();
+    final activeEntries = _providers.entries.where((e) => _activeProviderIds.contains(e.key)).toList();
+    final entries = activeEntries.isNotEmpty ? activeEntries : _providers.entries.toList();
     return Card(
       margin: const EdgeInsets.only(top: 4),
       child: Padding(padding: const EdgeInsets.all(6), child: Wrap(

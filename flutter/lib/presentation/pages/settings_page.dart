@@ -159,36 +159,38 @@ class _ProviderSettingsTabState extends ConsumerState<_ProviderSettingsTab> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Card(
-        child: InkWell(
-          onTap: () => context.go('/settings/provider?id=${p.id}&name=${Uri.encodeComponent(p.name)}&model=${Uri.encodeComponent(p.model)}'),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(children: [
-              Icon(icons[p.id] ?? Icons.api, color: Theme.of(context).colorScheme.primary),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(p.name, style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500)),
-                  const SizedBox(height: 2),
-                  Text('模型: ${p.model}${p.apiUrl != null && p.apiUrl!.isNotEmpty ? ' | ${p.apiUrl}' : ''}',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+        child: Row(children: [
+          Expanded(
+            child: InkWell(
+              onTap: () => context.go('/settings/provider?id=${p.id}&name=${Uri.encodeComponent(p.name)}&model=${Uri.encodeComponent(p.model)}'),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+                child: Row(children: [
+                  Icon(icons[p.id] ?? Icons.api, color: Theme.of(context).colorScheme.primary),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text(p.name, style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500)),
+                      const SizedBox(height: 2),
+                      Text('模型: ${p.model}${p.apiUrl != null && p.apiUrl!.isNotEmpty ? ' | ${p.apiUrl}' : ''}',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                    ]),
+                  ),
+                  Icon(Icons.circle, size: 10, color: isConfigured ? Colors.green : Colors.grey),
+                  const SizedBox(width: 8),
                 ]),
               ),
-              Icon(Icons.circle, size: 10, color: isConfigured ? Colors.green : Colors.grey),
-              const SizedBox(width: 8),
-              GestureDetector(
-                onTap: isConfigured ? () => _toggleActive(p) : null,
-                child: Switch(
-                  value: isActive,
-                  onChanged: isConfigured ? (_) => _toggleActive(p) : null,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-              ),
-              const SizedBox(width: 4),
-              const Icon(Icons.chevron_right),
-            ]),
+            ),
           ),
-        ),
+          Switch(
+            value: isActive,
+            onChanged: isConfigured ? (_) => _toggleActive(p) : null,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          const SizedBox(width: 4),
+          const Icon(Icons.chevron_right),
+          const SizedBox(width: 12),
+        ]),
       ),
     );
   }
