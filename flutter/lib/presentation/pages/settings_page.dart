@@ -92,16 +92,26 @@ class _ProviderSettingsTabState extends ConsumerState<_ProviderSettingsTab> {
   }
 
   Future<void> _toggleActive(ProviderConfig p) async {
-    final newActive = !p.isActive;
+    final saved = _providers.where((s) => s.id == p.id).firstOrNull;
+    final hasKey = saved?.apiKey != null && saved!.apiKey!.isNotEmpty;
+    if (!(saved?.isActive ?? false) && !hasKey) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('请先配置 API Key 后再启用厂商'), duration: Duration(seconds: 2)),
+        );
+      }
+      return;
+    }
+    final newActive = !(saved?.isActive ?? p.isActive);
     setState(() {
       final idx = _providers.indexWhere((x) => x.id == p.id);
-      if (idx >= 0) _providers[idx] = p.copyWith(isActive: newActive);
+      if (idx >= 0) _providers[idx] = (saved ?? p).copyWith(isActive: newActive);
       else {
         _providers.add(p.copyWith(isActive: newActive, createdAt: DateTime.now()));
       }
     });
     final ffi = FfiDatasource();
-    await ffi.saveProvider(p.copyWith(isActive: newActive));
+    await ffi.saveProvider((saved ?? p).copyWith(isActive: newActive));
   }
 
   @override
@@ -112,16 +122,16 @@ class _ProviderSettingsTabState extends ConsumerState<_ProviderSettingsTab> {
 
     final defaultProviders = <String, ProviderConfig>{
       for (final p in [
-        ProviderConfig(id: 'openai', name: 'OpenAI', model: 'gpt-4o-mini', authType: 'api_key', createdAt: DateTime.now()),
-        ProviderConfig(id: 'deepl', name: 'DeepL', model: 'default', authType: 'api_key', createdAt: DateTime.now()),
-        ProviderConfig(id: 'google', name: 'Google', model: 'nmt', authType: 'api_key', createdAt: DateTime.now()),
-        ProviderConfig(id: 'qwen', name: 'Qwen (通义千问)', model: 'qwen-turbo', authType: 'api_key', createdAt: DateTime.now()),
-        ProviderConfig(id: 'deepseek', name: 'DeepSeek', model: 'deepseek-chat', authType: 'api_key', createdAt: DateTime.now()),
-        ProviderConfig(id: 'kimi', name: 'Kimi (月之暗面)', model: 'moonshot-v1-8k', authType: 'api_key', createdAt: DateTime.now()),
-        ProviderConfig(id: 'glm', name: 'GLM (智谱)', model: 'glm-4-plus', authType: 'api_key', createdAt: DateTime.now()),
-        ProviderConfig(id: 'anthropic', name: 'Anthropic', model: 'claude-3-haiku-20240307', authType: 'api_key', createdAt: DateTime.now()),
-        ProviderConfig(id: 'azure', name: 'Azure OpenAI', model: 'gpt-4o-mini', authType: 'api_key', createdAt: DateTime.now()),
-        ProviderConfig(id: 'custom', name: 'Custom (兼容 API)', model: '自定义', authType: 'api_key', createdAt: DateTime.now()),
+        ProviderConfig(id: 'openai', name: 'OpenAI', model: 'gpt-4o-mini', authType: 'api_key', isActive: false, createdAt: DateTime.now()),
+        ProviderConfig(id: 'deepl', name: 'DeepL', model: 'default', authType: 'api_key', isActive: false, createdAt: DateTime.now()),
+        ProviderConfig(id: 'google', name: 'Google', model: 'nmt', authType: 'api_key', isActive: false, createdAt: DateTime.now()),
+        ProviderConfig(id: 'qwen', name: 'Qwen (通义千问)', model: 'qwen-turbo', authType: 'api_key', isActive: false, createdAt: DateTime.now()),
+        ProviderConfig(id: 'deepseek', name: 'DeepSeek', model: 'deepseek-chat', authType: 'api_key', isActive: false, createdAt: DateTime.now()),
+        ProviderConfig(id: 'kimi', name: 'Kimi (月之暗面)', model: 'moonshot-v1-8k', authType: 'api_key', isActive: false, createdAt: DateTime.now()),
+        ProviderConfig(id: 'glm', name: 'GLM (智谱)', model: 'glm-4-plus', authType: 'api_key', isActive: false, createdAt: DateTime.now()),
+        ProviderConfig(id: 'anthropic', name: 'Anthropic', model: 'claude-3-haiku-20240307', authType: 'api_key', isActive: false, createdAt: DateTime.now()),
+        ProviderConfig(id: 'azure', name: 'Azure OpenAI', model: 'gpt-4o-mini', authType: 'api_key', isActive: false, createdAt: DateTime.now()),
+        ProviderConfig(id: 'custom', name: 'Custom (兼容 API)', model: '自定义', authType: 'api_key', isActive: false, createdAt: DateTime.now()),
       ]) p.id: p
     };
 

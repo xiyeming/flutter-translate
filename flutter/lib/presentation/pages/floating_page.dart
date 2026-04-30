@@ -35,7 +35,7 @@ class _FloatingPageState extends ConsumerState<FloatingPage> {
     'qwen': 'Qwen', 'deepseek': 'DeepSeek', 'kimi': 'Kimi', 'glm': 'GLM',
     'anthropic': 'Anthropic', 'azure': 'Azure', 'custom': 'Custom',
   };
-  final _selectedProviders = <String>{'openai'};
+  final _selectedProviders = <String>{};
   final _activeProviderIds = <String>{};
   List<PromptTemplate> _promptTemplates = [];
   bool _isLoading = true;
@@ -115,7 +115,6 @@ class _FloatingPageState extends ConsumerState<FloatingPage> {
           _providers[p.id] = p.name;
           if (p.isActive) _activeProviderIds.add(p.id);
         }
-        if (providers.isEmpty) _activeProviderIds.addAll(_providers.keys);
       });
     } catch (_) {}
     try {
@@ -135,6 +134,15 @@ class _FloatingPageState extends ConsumerState<FloatingPage> {
         });
       }
     } catch (_) { if (mounted) setState(() => _isLoading = false); }
+    // Filter out disabled providers from selection and auto-select first active
+    if (mounted) {
+      setState(() {
+        _selectedProviders.removeWhere((id) => !_activeProviderIds.contains(id));
+        if (_selectedProviders.isEmpty && _activeProviderIds.isNotEmpty) {
+          _selectedProviders.add(_activeProviderIds.first);
+        }
+      });
+    }
   }
 
   @override
@@ -357,12 +365,20 @@ class _FloatingPageState extends ConsumerState<FloatingPage> {
 
   Widget _buildProviderPanel(ThemeData theme) {
     final activeEntries = _providers.entries.where((e) => _activeProviderIds.contains(e.key)).toList();
-    final entries = activeEntries.isNotEmpty ? activeEntries : _providers.entries.toList();
+    if (activeEntries.isEmpty) {
+      return Card(
+        margin: const EdgeInsets.only(top: 4),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text('暂无启用的厂商，请在设置中启用', style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+        ),
+      );
+    }
     return Card(
       margin: const EdgeInsets.only(top: 4),
       child: Padding(padding: const EdgeInsets.all(6), child: Wrap(
         spacing: 0, runSpacing: 0,
-        children: entries.map((e) => SizedBox(width: 150, child: CheckboxListTile(
+        children: activeEntries.map((e) => SizedBox(width: 150, child: CheckboxListTile(
           value: _selectedProviders.contains(e.key),
           title: Text(e.value, style: theme.textTheme.bodySmall),
           controlAffinity: ListTileControlAffinity.leading,
