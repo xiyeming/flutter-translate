@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:window_manager/window_manager.dart';
 import '../../data/models/translation_result.dart';
 import '../../data/models/prompt_template.dart';
+import '../../data/models/provider_config.dart';
 import '../../data/datasources/ffi_datasource.dart';
 import '../services/hotkey_service.dart';
 
@@ -36,7 +37,7 @@ class _FloatingPageState extends ConsumerState<FloatingPage> {
     'anthropic': 'Anthropic', 'azure': 'Azure', 'custom': 'Custom',
   };
   final _selectedProviders = <String>{};
-  final _activeProviderIds = <String>{};
+  List<ProviderConfig> _savedProviders = [];
   List<PromptTemplate> _promptTemplates = [];
   bool _isLoading = true;
   bool _isOcrProcessing = false;
@@ -106,23 +107,35 @@ class _FloatingPageState extends ConsumerState<FloatingPage> {
   }
 
   Future<void> _loadAll() async {
-    if (!_isLoading) return;
     setState(() => _isLoading = true);
+    await _reloadProviders();
+    await _reloadSession();
+    await _reloadPrompts();
+    if (mounted) setState(() => _isLoading = false);
+  }
+
+  Future<void> _reloadProviders() async {
     try {
       final providers = await _ffi.getProviders();
-      if (mounted) setState(() {
-        for (final p in providers) {
-          _providers[p.id] = p.name;
-          if (p.isActive) _activeProviderIds.add(p.id);
-        }
-      });
+      if (mounted) setState(() { _savedProviders = providers; for (final p in providers) { _providers[p.id] = p.name; } });
     } catch (_) {}
+  }
+
+  Future<void> _reloadSession() async {
     try {
       final session = await _ffi.getActiveSession();
       if (mounted && session.lastCompareProviders.isNotEmpty) {
-        setState(() { _selectedProviders.clear(); _selectedProviders.addAll(session.lastCompareProviders); });
+        final activeIds = _savedProviders.where((p) => p.isActive).map((p) => p.id).toSet();
+        setState(() {
+          _selectedProviders.clear();
+          _selectedProviders.addAll(session.lastCompareProviders.where((id) => activeIds.contains(id)));
+          if (_selectedProviders.isEmpty && activeIds.isNotEmpty) _selectedProviders.add(activeIds.first);
+        });
       }
     } catch (_) {}
+  }
+
+  Future<void> _reloadPrompts() async {
     try {
       final templates = await _ffi.getPromptTemplates();
       if (mounted) {
@@ -130,19 +143,9 @@ class _FloatingPageState extends ConsumerState<FloatingPage> {
           _promptTemplates = templates;
           final active = templates.where((t) => t.isActive).firstOrNull;
           if (active != null) { _activePromptId = active.id; _activePromptContent = active.content; }
-          _isLoading = false;
         });
       }
-    } catch (_) { if (mounted) setState(() => _isLoading = false); }
-    // Filter out disabled providers from selection and auto-select first active
-    if (mounted) {
-      setState(() {
-        _selectedProviders.removeWhere((id) => !_activeProviderIds.contains(id));
-        if (_selectedProviders.isEmpty && _activeProviderIds.isNotEmpty) {
-          _selectedProviders.add(_activeProviderIds.first);
-        }
-      });
-    }
+    } catch (_) {}
   }
 
   @override
@@ -364,7 +367,10 @@ class _FloatingPageState extends ConsumerState<FloatingPage> {
   }
 
   Widget _buildProviderPanel(ThemeData theme) {
-    final activeEntries = _providers.entries.where((e) => _activeProviderIds.contains(e.key)).toList();
+    final activeIds = _savedProviders.isEmpty
+        ? _providers.keys.toSet()  // 未保存时所有厂商默认可用
+        : _savedProviders.where((p) => p.isActive).map((p) => p.id).toSet();
+    final activeEntries = _providers.entries.where((e) => activeIds.contains(e.key)).toList();
     if (activeEntries.isEmpty) {
       return Card(
         margin: const EdgeInsets.only(top: 4),
