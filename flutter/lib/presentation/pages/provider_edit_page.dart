@@ -51,19 +51,6 @@ class _ProviderEditPageState extends ConsumerState<ProviderEditPage> {
     'custom': '',
   };
 
-  static const _defaultModels = <String, String>{
-    'openai': 'gpt-4o-mini',
-    'deepl': 'default',
-    'google': 'nmt',
-    'qwen': 'qwen-turbo',
-    'deepseek': 'deepseek-chat',
-    'kimi': 'moonshot-v1-8k',
-    'glm': 'glm-4-plus',
-    'anthropic': 'claude-3-haiku-20240307',
-    'azure': 'gpt-4o-mini',
-    'custom': '',
-  };
-
   @override
   void initState() {
     super.initState();
