@@ -36,6 +36,7 @@ class _FloatingPageState extends ConsumerState<FloatingPage> {
     'anthropic': 'Anthropic', 'azure': 'Azure', 'custom': 'Custom',
   };
   final _selectedProviders = <String>{'openai'};
+  final _activeProviderIds = <String>{};
   List<PromptTemplate> _promptTemplates = [];
   bool _isLoading = true;
   bool _isOcrProcessing = false;
@@ -109,7 +110,12 @@ class _FloatingPageState extends ConsumerState<FloatingPage> {
     setState(() => _isLoading = true);
     try {
       final providers = await _ffi.getProviders();
-      if (mounted) setState(() { for (final p in providers) { _providers[p.id] = p.name; } });
+      if (mounted) setState(() {
+        for (final p in providers) {
+          _providers[p.id] = p.name;
+          if (p.isActive) _activeProviderIds.add(p.id);
+        }
+      });
     } catch (_) {}
     try {
       final session = await _ffi.getActiveSession();
@@ -349,11 +355,12 @@ class _FloatingPageState extends ConsumerState<FloatingPage> {
   }
 
   Widget _buildProviderPanel(ThemeData theme) {
+    final entries = _providers.entries.where((e) => _activeProviderIds.contains(e.key)).toList();
     return Card(
       margin: const EdgeInsets.only(top: 4),
       child: Padding(padding: const EdgeInsets.all(6), child: Wrap(
         spacing: 0, runSpacing: 0,
-        children: _providers.entries.map((e) => SizedBox(width: 150, child: CheckboxListTile(
+        children: entries.map((e) => SizedBox(width: 150, child: CheckboxListTile(
           value: _selectedProviders.contains(e.key),
           title: Text(e.value, style: theme.textTheme.bodySmall),
           controlAffinity: ListTileControlAffinity.leading,
@@ -516,19 +523,27 @@ class _PromptManagerSheetState extends State<_PromptManagerSheet> {
               leading: t.isActive ? Icon(Icons.check_circle, color: theme.colorScheme.primary, size: 20) : const Icon(Icons.circle_outlined, size: 20),
               title: Text(t.name, style: theme.textTheme.bodyMedium),
               subtitle: Text(t.content, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
-              trailing: PopupMenuButton<String>(onSelected: (action) async {
-                if (action == 'activate') await widget.onActivate(t.id);
-                if (action == 'edit') await _addOrEdit(existing: t);
-                if (action == 'delete') {
-                  final confirm = await showDialog<bool>(context: context, builder: (c) => AlertDialog(title: const Text('确认删除'), content: Text('删除 "${t.name}"？'), actions: [TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('取消')), FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('删除'))]));
-                  if (confirm == true) await widget.onDelete(t.id);
-                }
-                if (mounted) Navigator.pop(context, true);
-              }, itemBuilder: (_) => [
-                if (!t.isActive) const PopupMenuItem(value: 'activate', child: Text('激活')),
-                const PopupMenuItem(value: 'edit', child: Text('编辑')),
-                const PopupMenuItem(value: 'delete', child: Text('删除', style: TextStyle(color: Colors.red))),
-              ]),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (!t.isActive)
+                    GestureDetector(
+                      onTap: () async { await widget.onActivate(t.id); if (mounted) Navigator.pop(context, true); },
+                      child: Padding(padding: const EdgeInsets.all(6), child: Icon(Icons.check_circle_outline, size: 18, color: theme.colorScheme.primary)),
+                    ),
+                  GestureDetector(
+                    onTap: () => _addOrEdit(existing: t),
+                    child: const Padding(padding: EdgeInsets.all(6), child: Icon(Icons.edit, size: 18)),
+                  ),
+                  GestureDetector(
+                    onTap: () async {
+                      final confirm = await showDialog<bool>(context: context, builder: (c) => AlertDialog(title: const Text('确认删除'), content: Text('删除 "${t.name}"？'), actions: [TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('取消')), FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('删除'))]));
+                      if (confirm == true) { await widget.onDelete(t.id); if (mounted) Navigator.pop(context, true); }
+                    },
+                    child: Padding(padding: const EdgeInsets.all(6), child: Icon(Icons.delete_outline, size: 18, color: theme.colorScheme.error)),
+                  ),
+                ],
+              ),
             ));
           })),
       ]),
