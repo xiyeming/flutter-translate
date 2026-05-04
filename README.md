@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="flutter/assets/icons/tray_icon.png" width="80" alt="xym_ft">
+  <img src="flutter/assets/icons/tray_icon.png" width="80" alt="Waylex">
 </p>
 
-<h1 align="center">xym_ft</h1>
+<h1 align="center">Waylex</h1>
 
 <p align="center">
   AI 驱动的 Linux Wayland 桌面翻译工具 | 截图即译 · 多厂商对比 · 全局快捷键
@@ -40,11 +40,11 @@
 
 ### 方式一：AppImage（推荐）
 
-从 [Releases](https://github.com/xiyeming/flutter-translate/releases) 下载最新 `xym_ft-*.AppImage`：
+从 [Releases](https://github.com/xiyeming/flutter-translate/releases) 下载最新 `Waylex-*.AppImage`：
 
 ```bash
-chmod +x xym_ft-*.AppImage
-./xym_ft-*.AppImage
+chmod +x Waylex-*.AppImage
+./Waylex-*.AppImage
 ```
 
 系统依赖（目标机器需预装）：
@@ -81,7 +81,7 @@ groups $USER | grep input
 将以下内容添加到 `~/.config/hypr/hyprland.conf`（或放在单独文件用 `source` 引入）：
 
 ```hypr
-# xym_ft 浮动窗口规则 (Hyprland 0.54+)
+# Waylex 浮动窗口规则 (Hyprland 0.54+)
 windowrule {
     name = xym-ft-float
     match:class = ^(com.xym.ft)$
