@@ -112,6 +112,21 @@ Future<String> getClipboardText() =>
 Future<void> setClipboardText({required String text}) =>
     RustLib.instance.api.crateFfiBridgeSetClipboardText(text: text);
 
+/// 获取当前应用版本号
+Future<String> getAppVersion() =>
+    RustLib.instance.api.crateFfiBridgeGetAppVersion();
+
+Future<UpdateInfo?> checkUpdate({required String currentVersion}) => RustLib
+    .instance
+    .api
+    .crateFfiBridgeCheckUpdate(currentVersion: currentVersion);
+
+Future<void> skipUpdateVersion({required String version}) =>
+    RustLib.instance.api.crateFfiBridgeSkipUpdateVersion(version: version);
+
+Future<bool> shouldCheckUpdate() =>
+    RustLib.instance.api.crateFfiBridgeShouldCheckUpdate();
+
 Future<void> initTray() => RustLib.instance.api.crateFfiBridgeInitTray();
 
 Future<void> showTrayNotification({

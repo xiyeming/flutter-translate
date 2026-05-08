@@ -210,3 +210,34 @@ class TranslationResult {
           completionTokens == other.completionTokens &&
           totalTokens == other.totalTokens;
 }
+
+class UpdateInfo {
+  final String currentVersion;
+  final String latestVersion;
+  final String downloadUrl;
+  final String releaseNotes;
+
+  const UpdateInfo({
+    required this.currentVersion,
+    required this.latestVersion,
+    required this.downloadUrl,
+    required this.releaseNotes,
+  });
+
+  @override
+  int get hashCode =>
+      currentVersion.hashCode ^
+      latestVersion.hashCode ^
+      downloadUrl.hashCode ^
+      releaseNotes.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is UpdateInfo &&
+          runtimeType == other.runtimeType &&
+          currentVersion == other.currentVersion &&
+          latestVersion == other.latestVersion &&
+          downloadUrl == other.downloadUrl &&
+          releaseNotes == other.releaseNotes;
+}

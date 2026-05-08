@@ -1264,7 +1264,7 @@ dependencies = [
 
 [[package]]
 name = "flutter-translate-native"
-version = "1.2.0"
+version = "2.1.0"
 dependencies = [
  "anyhow",
  "arboard",
@@ -1280,6 +1280,7 @@ dependencies = [
  "once_cell",
  "reqwest",
  "secret-service",
+ "semver",
  "serde",
  "serde_json",
  "sqlx",

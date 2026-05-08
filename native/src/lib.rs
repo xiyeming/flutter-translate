@@ -7,6 +7,7 @@ pub mod platform;
 pub mod translate;
 pub mod config;
 pub mod ocr;
+pub mod update;
 
 #[cfg(test)]
 mod tests;

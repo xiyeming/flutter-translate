@@ -7,6 +7,8 @@ import 'package:tray_manager/tray_manager.dart';
 import 'package:flutter_translate/src/rust/frb_generated.dart';
 import 'package:flutter_translate/src/rust/ffi/bridge.dart' as bridge;
 import 'presentation/services/hotkey_service.dart';
+import 'presentation/widgets/common/update_dialog.dart';
+import 'data/datasources/ffi_datasource.dart';
 import 'app/router/app_router.dart';
 import 'app/app.dart';
 
@@ -98,6 +100,26 @@ class _TrayAppState extends ConsumerState<TrayApp> with TrayListener {
   void initState() {
     super.initState();
     trayManager.addListener(this);
+    _checkUpdateOnStartup();
+  }
+
+  Future<void> _checkUpdateOnStartup() async {
+    await Future.delayed(const Duration(seconds: 3));
+    if (!mounted) return;
+
+    try {
+      final ffi = FfiDatasource();
+      final shouldCheck = await ffi.shouldCheckUpdate();
+      if (!shouldCheck) return;
+
+      final currentVersion = await ffi.getAppVersion();
+      final updateInfo = await ffi.checkUpdate(currentVersion);
+      if (!mounted || updateInfo == null) return;
+
+      UpdateDialog.show(context, updateInfo);
+    } catch (e) {
+      debugPrint('Update check failed: $e');
+    }
   }
 
   @override

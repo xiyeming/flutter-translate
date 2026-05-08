@@ -106,6 +106,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ShortcutBinding dco_decode_box_autoadd_shortcut_binding(dynamic raw);
 
   @protected
+  UpdateInfo dco_decode_box_autoadd_update_info(dynamic raw);
+
+  @protected
   DesktopEnv dco_decode_desktop_env(dynamic raw);
 
   @protected
@@ -139,6 +142,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String? dco_decode_opt_String(dynamic raw);
 
   @protected
+  UpdateInfo? dco_decode_opt_box_autoadd_update_info(dynamic raw);
+
+  @protected
   List<String>? dco_decode_opt_list_String(dynamic raw);
 
   @protected
@@ -167,6 +173,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void dco_decode_unit(dynamic raw);
+
+  @protected
+  UpdateInfo dco_decode_update_info(dynamic raw);
 
   @protected
   BigInt dco_decode_usize(dynamic raw);
@@ -247,6 +256,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  UpdateInfo sse_decode_box_autoadd_update_info(SseDeserializer deserializer);
+
+  @protected
   DesktopEnv sse_decode_desktop_env(SseDeserializer deserializer);
 
   @protected
@@ -288,6 +300,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String? sse_decode_opt_String(SseDeserializer deserializer);
 
   @protected
+  UpdateInfo? sse_decode_opt_box_autoadd_update_info(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<String>? sse_decode_opt_list_String(SseDeserializer deserializer);
 
   @protected
@@ -316,6 +333,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_decode_unit(SseDeserializer deserializer);
+
+  @protected
+  UpdateInfo sse_decode_update_info(SseDeserializer deserializer);
 
   @protected
   BigInt sse_decode_usize(SseDeserializer deserializer);
@@ -407,6 +427,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_update_info(
+    UpdateInfo self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_desktop_env(DesktopEnv self, SseSerializer serializer);
 
   @protected
@@ -455,6 +481,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_opt_String(String? self, SseSerializer serializer);
 
   @protected
+  void sse_encode_opt_box_autoadd_update_info(
+    UpdateInfo? self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_opt_list_String(List<String>? self, SseSerializer serializer);
 
   @protected
@@ -495,6 +527,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_unit(void self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_update_info(UpdateInfo self, SseSerializer serializer);
 
   @protected
   void sse_encode_usize(BigInt self, SseSerializer serializer);

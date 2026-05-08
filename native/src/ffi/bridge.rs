@@ -1,7 +1,8 @@
 use flutter_rust_bridge::frb;
-use crate::ffi::types::{TranslateRequest, TranslationResult, ProviderConfig, ActiveSession, ShortcutBinding, DesktopEnv, PromptTemplate};
+use crate::ffi::types::{TranslateRequest, TranslationResult, ProviderConfig, ActiveSession, ShortcutBinding, DesktopEnv, PromptTemplate, UpdateInfo};
 use crate::ffi::error::{TranslateError, ConfigError, OcrError, ClipboardError, TrayError, HotkeyError};
 use crate::config::ConfigManager;
+use crate::update::UpdateService;
 
 /// 初始化所有服务（翻译引擎、配置管理等）
 #[frb]
@@ -236,6 +237,29 @@ pub fn get_clipboard_text() -> Result<String, ClipboardError> {
 #[frb]
 pub fn set_clipboard_text(text: String) -> Result<(), ClipboardError> {
     crate::platform::platform().set_clipboard_text(text)
+}
+
+/// 获取当前应用版本号
+#[frb]
+pub fn get_app_version() -> String {
+    option_env!("APP_VERSION").unwrap_or(env!("CARGO_PKG_VERSION")).to_string()
+}
+
+// ========== 版本更新 ==========
+
+#[frb]
+pub async fn check_update(current_version: String) -> Result<Option<UpdateInfo>, ConfigError> {
+    UpdateService::check_update(current_version).await
+}
+
+#[frb]
+pub async fn skip_update_version(version: String) -> Result<(), ConfigError> {
+    UpdateService::set_skipped_version(version).await
+}
+
+#[frb]
+pub async fn should_check_update() -> Result<bool, ConfigError> {
+    UpdateService::should_check().await
 }
 
 // ========== 托盘服务 ==========

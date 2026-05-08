@@ -187,6 +187,26 @@ impl Database {
         .await
         .map_err(ConfigError::DbError)?;
 
+        sqlx::query(
+            r#"
+            CREATE TABLE IF NOT EXISTS app_update (
+                id TEXT PRIMARY KEY CHECK (id = 'update_state'),
+                skipped_version TEXT NOT NULL DEFAULT '',
+                last_check_at TEXT NOT NULL DEFAULT (datetime('now'))
+            )
+            "#,
+        )
+        .execute(pool)
+        .await
+        .map_err(ConfigError::DbError)?;
+
+        sqlx::query(
+            "INSERT OR IGNORE INTO app_update (id, skipped_version, last_check_at) VALUES ('update_state', '', datetime('now'))"
+        )
+        .execute(pool)
+        .await
+        .map_err(ConfigError::DbError)?;
+
         Ok(())
     }
 }

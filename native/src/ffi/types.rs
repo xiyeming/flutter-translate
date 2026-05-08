@@ -96,6 +96,16 @@ pub struct PromptTemplate {
     pub created_at: DateTime<Utc>,
 }
 
+// ========== 更新相关类型 ==========
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UpdateInfo {
+    pub current_version: String,
+    pub latest_version: String,
+    pub download_url: String,
+    pub release_notes: String,
+}
+
 // ========== 系统相关类型 ==========
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

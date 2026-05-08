@@ -52,8 +52,17 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Extract version from pubspec.yaml
+        id: version
+        run: |
+          VERSION=$(grep '^version:' flutter/pubspec.yaml | sed 's/version: *//')
+          echo "app_version=$VERSION" >> $GITHUB_OUTPUT
+          echo "APP_VERSION=$VERSION" >> $GITHUB_ENV
+
       - name: Build Rust library
         working-directory: native
+        env:
+          APP_VERSION: ${{ steps.version.outputs.app_version }}
         run: cargo build --release 2>&1 | tee build.log
 
       - name: Upload build log on failure
@@ -137,8 +146,17 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Extract version from pubspec.yaml
+        id: version
+        run: |
+          VERSION=$(grep '^version:' flutter/pubspec.yaml | sed 's/version: *//')
+          echo "app_version=$VERSION" >> $GITHUB_OUTPUT
+          echo "APP_VERSION=$VERSION" >> $GITHUB_ENV
+
       - name: Build Rust library
         working-directory: native
+        env:
+          APP_VERSION: ${{ steps.version.outputs.app_version }}
         run: cargo build --release 2>&1 | tee build.log
 
       - name: Upload build log on failure
@@ -220,12 +238,23 @@ jobs:
         working-directory: flutter
         run: flutter pub get
 
+      - name: Extract version from pubspec.yaml
+        id: version
+        run: |
+          VERSION=$(grep '^version:' flutter/pubspec.yaml | sed 's/version: *//')
+          echo "app_version=$VERSION" >> $GITHUB_OUTPUT
+          echo "APP_VERSION=$VERSION" >> $GITHUB_ENV
+
       - name: Build x86_64
         working-directory: native
+        env:
+          APP_VERSION: ${{ steps.version.outputs.app_version }}
         run: cargo build --release --target x86_64-apple-darwin 2>&1 | tee build-x86_64.log
 
       - name: Build aarch64
         working-directory: native
+        env:
+          APP_VERSION: ${{ steps.version.outputs.app_version }}
         run: cargo build --release --target aarch64-apple-darwin 2>&1 | tee build-aarch64.log
 
       - name: Upload macOS build logs on failure
@@ -327,10 +356,20 @@ jobs:
             native/target
           key: ${{ runner.os }}-cargo-${{ hashFiles('native/Cargo.lock') }}
 
+      - name: Extract version from pubspec.yaml
+        id: version
+        run: |
+          $line = Select-String -Path "flutter/pubspec.yaml" -Pattern "^version:"
+          $version = ($line.Line -replace "version:\s*", "").Trim()
+          Write-Output "app_version=$version" >> $env:GITHUB_OUTPUT
+          Write-Output "APP_VERSION=$version" >> $env:GITHUB_ENV
+          Write-Output "Version: $version"
+
       - name: Build Rust library
         working-directory: native
         env:
           RUST_BACKTRACE: 1
+          APP_VERSION: ${{ steps.version.outputs.app_version }}
         run: cargo build --release 2>&1 | Tee-Object -FilePath build.log
 
       - name: Upload Windows build log on failure

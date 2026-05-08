@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_translate/src/rust/ffi/bridge.dart' as bridge;
 import 'package:flutter_translate/src/rust/ffi/types.dart' as bridge_types;
 import '../../core/errors/app_exception.dart';
@@ -235,6 +236,41 @@ Future<void> unregisterHotkeys() async {
       await bridge.showTrayNotification(title: title, body: body);
     } catch (e) {
       throw SystemException('显示托盘通知失败: $e');
+    }
+  }
+
+  // ========== 版本更新 ==========
+
+  Future<String> getAppVersion() async {
+    try {
+      return await bridge.getAppVersion();
+    } catch (e) {
+      return '1.2.0';
+    }
+  }
+
+  Future<bridge_types.UpdateInfo?> checkUpdate(String currentVersion) async {
+    try {
+      return await bridge.checkUpdate(currentVersion: currentVersion);
+    } catch (e) {
+      debugPrint('检查更新失败: $e');
+      return null;
+    }
+  }
+
+  Future<void> skipUpdateVersion(String version) async {
+    try {
+      await bridge.skipUpdateVersion(version: version);
+    } catch (e) {
+      debugPrint('跳过版本失败: $e');
+    }
+  }
+
+  Future<bool> shouldCheckUpdate() async {
+    try {
+      return await bridge.shouldCheckUpdate();
+    } catch (e) {
+      return false;
     }
   }
 

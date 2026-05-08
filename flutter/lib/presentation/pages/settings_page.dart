@@ -6,6 +6,7 @@ import '../../data/datasources/ffi_datasource.dart';
 import '../../data/models/provider_config.dart';
 import '../../data/models/shortcut_binding.dart';
 import '../../presentation/services/hotkey_service.dart';
+import '../../presentation/widgets/common/update_dialog.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
@@ -491,6 +492,44 @@ class _ThemeSettingsTab extends ConsumerStatefulWidget {
 
 class _ThemeSettingsTabState extends ConsumerState<_ThemeSettingsTab> {
   String _themeMode = 'system';
+  String _version = '';
+  bool _checking = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadVersion();
+  }
+
+  Future<void> _loadVersion() async {
+    final v = await FfiDatasource().getAppVersion();
+    if (mounted) setState(() => _version = v);
+  }
+
+  Future<void> _checkUpdate() async {
+    setState(() => _checking = true);
+    try {
+      final ffi = FfiDatasource();
+      final currentVersion = await ffi.getAppVersion();
+      final updateInfo = await ffi.checkUpdate(currentVersion);
+      if (!mounted) return;
+      if (updateInfo != null) {
+        UpdateDialog.show(context, updateInfo);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('当前已是最新版本')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('检查更新失败: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _checking = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -516,6 +555,23 @@ class _ThemeSettingsTabState extends ConsumerState<_ThemeSettingsTab> {
               ),
             ],
           ),
+        ),
+        const Divider(height: 32),
+        ListTile(
+          leading: const Icon(Icons.info_outline),
+          title: const Text('当前版本'),
+          subtitle: Text(_version.isEmpty ? '加载中...' : _version),
+        ),
+        ListTile(
+          leading: _checking
+              ? const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.system_update),
+          title: const Text('检查更新'),
+          onTap: _checking ? null : _checkUpdate,
         ),
       ],
     );
