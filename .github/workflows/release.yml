@@ -314,19 +314,37 @@ jobs:
 
       - name: Copy native library to bundle
         run: |
-          Get-ChildItem -Path "native\target\release\*.dll" | Select-Object -ExpandProperty FullName
-          Copy-Item -Path "native\target\release\flutter_translate_native.dll" -Destination "flutter\build\windows\x64\release\runner\Release\" -Force
+          $dll = "native\target\release\flutter_translate_native.dll"
+          Write-Output "DLL: $dll"
+
+          # Locate the Release directory containing the built .exe
+          $exe = Get-ChildItem -Path "flutter\build\windows" -Recurse -Filter "*.exe" `
+            | Where-Object { $_.Name -ne "flutter_windows.dll" -and $_.DirectoryName -like "*Release*" } `
+            | Select-Object -First 1
+          if (-not $exe) {
+            Write-Error "Built Windows executable not found"
+            exit 1
+          }
+
+          $releaseDir = $exe.DirectoryName
+          Write-Output "Copying DLL to: $releaseDir"
+          Copy-Item -Path $dll -Destination "$releaseDir\" -Force
+
+          # Record the path for packaging step
+          "$releaseDir" | Out-File -FilePath "$env:RUNNER_TEMP\windows-release-dir.txt"
 
       - name: Package Windows zip
-        working-directory: flutter\build\windows\x64\release\runner
         run: |
-          Compress-Archive -Path "Release" -DestinationPath "waylex-windows-x64.zip"
+          $releaseDir = Get-Content -Path "$env:RUNNER_TEMP\windows-release-dir.txt"
+          $runnerDir = Split-Path -Parent $releaseDir
+          Set-Location $runnerDir
+          Compress-Archive -Path (Split-Path -Leaf $releaseDir) -DestinationPath "waylex-windows-x64.zip"
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
           name: windows-artifacts
-          path: flutter/build/windows/x64/release/runner/waylex-windows-x64.zip
+          path: flutter/build/windows/**/waylex-windows-x64.zip
 
   build-flatpak:
     needs: [build-linux]
