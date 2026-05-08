@@ -62,7 +62,7 @@ jobs:
 
       - name: Build Rust library
         working-directory: native
-        run: cargo build --release
+        run: cargo build --release 2>&1 | tail -100
 
       - name: Generate FFI bindings
         working-directory: flutter
@@ -148,7 +148,7 @@ jobs:
 
       - name: Build Rust library
         working-directory: native
-        run: cargo build --release
+        run: cargo build --release 2>&1 | tail -100
 
       - name: Generate FFI bindings
         working-directory: flutter
@@ -208,11 +208,11 @@ jobs:
 
       - name: Build x86_64
         working-directory: native
-        run: cargo build --release --target x86_64-apple-darwin
+        run: cargo build --release --target x86_64-apple-darwin 2>&1 | tail -100
 
       - name: Build aarch64
         working-directory: native
-        run: cargo build --release --target aarch64-apple-darwin
+        run: cargo build --release --target aarch64-apple-darwin 2>&1 | tail -100
 
       - name: Create Universal Binary with lipo
         working-directory: native
@@ -244,6 +244,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+
       - name: Install Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -274,7 +277,7 @@ jobs:
         working-directory: native
         env:
           RUST_BACKTRACE: 1
-        run: cargo build --release
+        run: cargo build --release 2>&1 | Select-Object -Last 100
 
       - name: Generate FFI bindings
         working-directory: flutter
