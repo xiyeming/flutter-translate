@@ -61,7 +61,7 @@ jobs:
             install: dnf install -y curl gcc openssl-devel pkgconfig sqlite-devel
           - distro: opensuse
             image: opensuse/tumbleweed
-            install: zypper install -y curl gcc libopenssl-devel pkgconfig sqlite3-devel
+            install: zypper ref && zypper --non-interactive install curl gcc libopenssl-devel pkgconfig sqlite3-devel
     container:
       image: ${{ matrix.image }}
     steps:
