@@ -113,11 +113,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          flutter-version: '3.41.x'
+      - name: Install Flutter (ARM64 via git)
+        run: |
+          git clone --depth 1 --branch stable https://github.com/flutter/flutter.git $HOME/flutter
+          echo "$HOME/flutter/bin" >> $GITHUB_PATH
+          $HOME/flutter/bin/flutter doctor -v
 
       - name: Install system dependencies
         run: |
@@ -209,20 +209,20 @@ jobs:
       - name: Build x86_64
         working-directory: native
         run: cargo build --release --target x86_64-apple-darwin
-        continue-on-error: true
 
       - name: Build aarch64
         working-directory: native
         run: cargo build --release --target aarch64-apple-darwin
-        continue-on-error: true
 
       - name: Create Universal Binary with lipo
         working-directory: native
         run: |
           mkdir -p target/universal/release
-          lipo -create \
-            target/x86_64-apple-darwin/release/libflutter_translate_native.dylib \
-            target/aarch64-apple-darwin/release/libflutter_translate_native.dylib \
+          X86_64_DYLIB="target/x86_64-apple-darwin/release/libflutter_translate_native.dylib"
+          AARCH64_DYLIB="target/aarch64-apple-darwin/release/libflutter_translate_native.dylib"
+          if [ ! -f "$X86_64_DYLIB" ]; then echo "Missing x86_64 dylib"; exit 1; fi
+          if [ ! -f "$AARCH64_DYLIB" ]; then echo "Missing aarch64 dylib"; exit 1; fi
+          lipo -create "$X86_64_DYLIB" "$AARCH64_DYLIB" \
             -output target/universal/release/libflutter_translate_native.dylib
           lipo -info target/universal/release/libflutter_translate_native.dylib
 
