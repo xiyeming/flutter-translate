@@ -24,6 +24,10 @@ Thumbs.db
 
 # Build artifacts
 build/
+repo/
+build-dir/
+*.flatpak
+flatpak/*.tar.gz
 
 # Secrets / env
 .env
