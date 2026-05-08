@@ -2,7 +2,7 @@
 mod tests {
     use std::sync::Arc;
     use crate::ffi::error::TranslateError;
-    use crate::ffi::types::{TranslateRequest, TranslationResult};
+    use crate::ffi::types::TranslateRequest;
     use crate::translate::*;
 
     fn make_request() -> TranslateRequest {

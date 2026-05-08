@@ -14,6 +14,7 @@ pub struct TrayService {
     action_tx: broadcast::Sender<String>,
 }
 
+#[allow(dead_code)]
 impl TrayService {
     pub fn new() -> Self {
         let (tx, _rx) = broadcast::channel::<String>(16);

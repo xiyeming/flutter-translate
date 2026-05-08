@@ -52,7 +52,7 @@ async fn get_from_sqlite(provider_id: &str) -> Result<String, ConfigError> {
         .bind(provider_id)
         .fetch_optional(&pool)
         .await
-        .map_err(|e| ConfigError::DbError(e))?;
+        .map_err(ConfigError::DbError)?;
 
     match row {
         Some(row) => {
@@ -73,7 +73,7 @@ async fn set_to_sqlite(provider_id: &str, api_key: &str) -> Result<(), ConfigErr
     .bind(api_key)
     .execute(&pool)
     .await
-    .map_err(|e| ConfigError::DbError(e))?;
+    .map_err(ConfigError::DbError)?;
     Ok(())
 }
 
@@ -83,6 +83,6 @@ async fn delete_from_sqlite(provider_id: &str) -> Result<(), ConfigError> {
         .bind(provider_id)
         .execute(&pool)
         .await
-        .map_err(|e| ConfigError::DbError(e))?;
+        .map_err(ConfigError::DbError)?;
     Ok(())
 }

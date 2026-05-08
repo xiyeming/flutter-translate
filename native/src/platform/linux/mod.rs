@@ -10,7 +10,7 @@ pub mod tray;
 
 pub struct LinuxBackend {
     hotkey_service: tokio::sync::Mutex<hotkey::HotkeyService>,
-    clipboard_service: clipboard::ClipboardService,
+    clipboard_service: Option<clipboard::ClipboardService>,
     ocr_service: tokio::sync::Mutex<crate::ocr::OcrService>,
     tray_service: tokio::sync::Mutex<tray::TrayService>,
 }
@@ -19,8 +19,7 @@ impl LinuxBackend {
     pub fn new() -> Self {
         Self {
             hotkey_service: tokio::sync::Mutex::new(hotkey::HotkeyService::new()),
-            clipboard_service: clipboard::ClipboardService::new()
-                .expect("Failed to initialize clipboard service"),
+            clipboard_service: clipboard::ClipboardService::new().ok(),
             ocr_service: tokio::sync::Mutex::new(
                 crate::ocr::OcrService::new().expect("Failed to initialize OCR service")
             ),
@@ -49,11 +48,17 @@ impl PlatformBackend for LinuxBackend {
     }
 
     fn get_clipboard_text(&self) -> Result<String, ClipboardError> {
-        self.clipboard_service.get_text()
+        match &self.clipboard_service {
+            Some(svc) => svc.get_text(),
+            None => Err(ClipboardError::WlError("Clipboard service unavailable".into())),
+        }
     }
 
     fn set_clipboard_text(&self, text: String) -> Result<(), ClipboardError> {
-        self.clipboard_service.set_text(text)
+        match &self.clipboard_service {
+            Some(svc) => svc.set_text(text),
+            None => Err(ClipboardError::WlError("Clipboard service unavailable".into())),
+        }
     }
 
     async fn screenshot(&self) -> Result<Vec<u8>, OcrError> {

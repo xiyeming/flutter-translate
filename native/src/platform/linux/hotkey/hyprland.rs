@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::ffi::error::HotkeyError;
 use crate::ffi::types::ShortcutBinding;
 use std::collections::HashMap;
@@ -15,6 +17,7 @@ pub struct HyprlandHotkeyService {
     running: Arc<AtomicBool>,
 }
 
+#[allow(dead_code)]
 impl HyprlandHotkeyService {
     pub fn new() -> Result<Self, HotkeyError> {
         Ok(Self { binds: Vec::new(), running: Arc::new(AtomicBool::new(false)) })

@@ -20,7 +20,7 @@ impl KdeHotkeyService {
 
     pub async fn register_all(&mut self, shortcuts: Vec<ShortcutBinding>) -> Result<(), HotkeyError> {
         let conn = Connection::session().await
-            .map_err(|e| HotkeyError::DbusError(e))?;
+            .map_err(HotkeyError::DbusError)?;
 
         let proxy = zbus::Proxy::new(
             &conn,
@@ -29,7 +29,7 @@ impl KdeHotkeyService {
             KGLOBALACCEL_IFACE,
         )
         .await
-        .map_err(|e| HotkeyError::DbusError(e))?;
+        .map_err(HotkeyError::DbusError)?;
 
         for binding in &shortcuts {
             if !binding.enabled {
@@ -60,7 +60,7 @@ impl KdeHotkeyService {
                 &(action.clone(), keys.clone(), keys),
             )
             .await
-            .map_err(|e| HotkeyError::DbusError(e))?;
+            .map_err(HotkeyError::DbusError)?;
 
         tracing::info!(
             "Registered KDE shortcut: {} -> {}",

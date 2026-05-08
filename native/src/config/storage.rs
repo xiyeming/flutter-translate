@@ -16,12 +16,12 @@ impl Database {
         if !Sqlite::database_exists(&db_url).await.unwrap_or(false) {
             Sqlite::create_database(&db_url)
                 .await
-                .map_err(|e| ConfigError::DbError(e))?;
+                .map_err(ConfigError::DbError)?;
         }
 
         let pool = SqlitePool::connect(&db_url)
             .await
-            .map_err(|e| ConfigError::DbError(e))?;
+            .map_err(ConfigError::DbError)?;
 
         Self::run_migrations(&pool).await?;
 
@@ -60,7 +60,7 @@ impl Database {
         )
         .execute(pool)
         .await
-        .map_err(|e| ConfigError::DbError(e))?;
+        .map_err(ConfigError::DbError)?;
 
         sqlx::query(
             r#"
@@ -77,7 +77,7 @@ impl Database {
         )
         .execute(pool)
         .await
-        .map_err(|e| ConfigError::DbError(e))?;
+        .map_err(ConfigError::DbError)?;
 
         sqlx::query(
             r#"
@@ -91,7 +91,7 @@ impl Database {
         )
         .execute(pool)
         .await
-        .map_err(|e| ConfigError::DbError(e))?;
+        .map_err(ConfigError::DbError)?;
 
         sqlx::query(
             r#"
@@ -100,7 +100,7 @@ impl Database {
         )
         .execute(pool)
         .await
-        .map_err(|e| ConfigError::DbError(e))?;
+        .map_err(ConfigError::DbError)?;
 
         sqlx::query(
             r#"
@@ -114,7 +114,7 @@ impl Database {
         )
         .execute(pool)
         .await
-        .map_err(|e| ConfigError::DbError(e))?;
+        .map_err(ConfigError::DbError)?;
 
         sqlx::query(
             r#"
@@ -128,7 +128,7 @@ impl Database {
         )
         .execute(pool)
         .await
-        .map_err(|e| ConfigError::DbError(e))?;
+        .map_err(ConfigError::DbError)?;
 
         sqlx::query(
             r#"
@@ -145,7 +145,7 @@ impl Database {
         )
         .execute(pool)
         .await
-        .map_err(|e| ConfigError::DbError(e))?;
+        .map_err(ConfigError::DbError)?;
 
         sqlx::query(
             r#"
@@ -154,7 +154,7 @@ impl Database {
         )
         .execute(pool)
         .await
-        .map_err(|e| ConfigError::DbError(e))?;
+        .map_err(ConfigError::DbError)?;
 
         sqlx::query(
             r#"
@@ -166,7 +166,7 @@ impl Database {
         )
         .execute(pool)
         .await
-        .map_err(|e| ConfigError::DbError(e))?;
+        .map_err(ConfigError::DbError)?;
 
         let _ = sqlx::query("ALTER TABLE providers ADD COLUMN system_prompt TEXT")
             .execute(pool)
@@ -185,7 +185,7 @@ impl Database {
         )
         .execute(pool)
         .await
-        .map_err(|e| ConfigError::DbError(e))?;
+        .map_err(ConfigError::DbError)?;
 
         Ok(())
     }

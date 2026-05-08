@@ -55,7 +55,7 @@ impl WaylandClipboardService {
         }
 
         String::from_utf8(output.stdout)
-            .map_err(|e| ClipboardError::Utf8Error(e))
+            .map_err(ClipboardError::Utf8Error)
             .map(|s| s.trim().to_string())
     }
 

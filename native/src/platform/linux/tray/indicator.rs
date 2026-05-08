@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use zbus::Connection;
 use crate::ffi::error::TrayError;
 

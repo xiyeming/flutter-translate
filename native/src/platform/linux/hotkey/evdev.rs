@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::ffi::error::HotkeyError;
 use crate::ffi::types::ShortcutBinding;
 use std::collections::HashSet;
@@ -13,6 +15,7 @@ pub struct EvdevHotkeyService {
     running: Arc<AtomicBool>,
 }
 
+#[allow(dead_code)]
 impl EvdevHotkeyService {
     pub fn new() -> Result<Self, HotkeyError> {
         Ok(Self {
@@ -184,7 +187,7 @@ impl EvdevHotkeyService {
                         }
                         Err(e) => {
                             consecutive_errors += 1;
-                            if consecutive_errors == 1 || consecutive_errors % 50 == 0 {
+                            if consecutive_errors == 1 || consecutive_errors.is_multiple_of(50) {
                                 tracing::warn!(
                                     "[evdev] fetch_events error on {} ({} consecutive): {}",
                                     device_name, consecutive_errors, e

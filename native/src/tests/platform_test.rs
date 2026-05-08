@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::platform::{create_platform_backend, init_platform, platform, PlatformBackend, PlatformInitError};
+    use crate::platform::{create_platform_backend, init_platform, platform, PlatformInitError};
 
     #[test]
     fn test_create_platform_backend() {
@@ -72,31 +72,31 @@ mod tests {
         assert!(err.to_string().contains("User cancelled selection"));
     }
 
-    /// PNG 文件魔数 (magic bytes)
-    const PNG_MAGIC: &[u8] = &[0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
-
-    /// 验证字节流是否为有效的 PNG 图像
-    fn assert_valid_png(data: &[u8]) {
-        assert!(
-            data.len() >= PNG_MAGIC.len(),
-            "PNG data too short: {} bytes",
-            data.len()
-        );
-        assert_eq!(
-            &data[..PNG_MAGIC.len()],
-            PNG_MAGIC,
-            "screenshot data does not start with PNG magic bytes"
-        );
-        // PNG 文件以 IEND chunk 结尾: 00 00 00 00 49 45 4E 44 AE 42 60 82
-        assert!(
-            data.windows(12).any(|w| w == [0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82]),
-            "PNG data does not contain valid IEND trailer"
-        );
-    }
-
     #[cfg(target_os = "windows")]
     mod windows_tests {
         use super::*;
+
+        /// PNG 文件魔数 (magic bytes)
+        const PNG_MAGIC: &[u8] = &[0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
+
+        /// 验证字节流是否为有效的 PNG 图像
+        fn assert_valid_png(data: &[u8]) {
+            assert!(
+                data.len() >= PNG_MAGIC.len(),
+                "PNG data too short: {} bytes",
+                data.len()
+            );
+            assert_eq!(
+                &data[..PNG_MAGIC.len()],
+                PNG_MAGIC,
+                "screenshot data does not start with PNG magic bytes"
+            );
+            // PNG 文件以 IEND chunk 结尾: 00 00 00 00 49 45 4E 44 AE 42 60 82
+            assert!(
+                data.windows(12).any(|w| w == [0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82]),
+                "PNG data does not contain valid IEND trailer"
+            );
+        }
 
         #[tokio::test]
         async fn test_windows_screenshot_returns_valid_png() {

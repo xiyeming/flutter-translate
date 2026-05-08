@@ -24,13 +24,13 @@ impl DesktopScreenshot {
                 .args(["-r", "-b", "-n", "-o"])
                 .arg(temp_file.to_str().unwrap())
                 .output()
-                .map_err(|e| OcrError::CommandError(e))?;
+                .map_err(OcrError::CommandError)?;
 
             if !output.status.success() {
                 return Err(OcrError::ScreenshotFailed);
             }
 
-            let data = fs::read(&temp_file).map_err(|e| OcrError::IoError(e))?;
+            let data = fs::read(&temp_file).map_err(OcrError::IoError)?;
 
             fs::remove_file(&temp_file).ok();
 
@@ -60,13 +60,13 @@ impl DesktopScreenshot {
             .args(["-a", "-f"])
             .arg(temp_file.to_str().unwrap())
             .output()
-            .map_err(|e| OcrError::CommandError(e))?;
+            .map_err(OcrError::CommandError)?;
 
         if !output.status.success() {
             return Err(OcrError::ScreenshotFailed);
         }
 
-        let data = fs::read(&temp_file).map_err(|e| OcrError::IoError(e))?;
+        let data = fs::read(&temp_file).map_err(OcrError::IoError)?;
 
         fs::remove_file(&temp_file).ok();
         Ok(data)
@@ -77,7 +77,7 @@ impl DesktopScreenshot {
         let slurp = Command::new("slurp")
             .arg("-d")
             .output()
-            .map_err(|e| OcrError::CommandError(e))?;
+            .map_err(OcrError::CommandError)?;
 
         if !slurp.status.success() {
             return Err(OcrError::UserCancelled);
@@ -91,7 +91,7 @@ impl DesktopScreenshot {
         let output = Command::new("grim")
             .args(["-g", &area, "-t", "png", "-"])
             .output()
-            .map_err(|e| OcrError::CommandError(e))?;
+            .map_err(OcrError::CommandError)?;
 
         if !output.status.success() {
             return Err(OcrError::ScreenshotFailed);

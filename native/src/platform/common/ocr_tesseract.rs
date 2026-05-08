@@ -13,10 +13,7 @@ pub fn recognize_blocking(image_data: &[u8], lang: &str) -> Result<OcrResult, Oc
     let start = Instant::now();
 
     let img = image::load_from_memory(image_data).map_err(|e| {
-        OcrError::CommandError(std::io::Error::new(
-            std::io::ErrorKind::Other,
-            e.to_string(),
-        ))
+        OcrError::CommandError(std::io::Error::other(e.to_string()))
     })?;
 
     let processed = preprocess(img);
@@ -24,14 +21,11 @@ pub fn recognize_blocking(image_data: &[u8], lang: &str) -> Result<OcrResult, Oc
     let temp_dir = std::env::temp_dir();
     let temp_path = temp_dir.join("Waylex_ocr.png");
     {
-        let mut file = std::fs::File::create(&temp_path).map_err(|e| OcrError::IoError(e))?;
+        let mut file = std::fs::File::create(&temp_path).map_err(OcrError::IoError)?;
         processed
             .write_to(&mut file, image::ImageFormat::Png)
             .map_err(|e| {
-                OcrError::IoError(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    e.to_string(),
-                ))
+                OcrError::IoError(std::io::Error::other(e.to_string()))
             })?;
         file.write_all(b"")?;
     }
@@ -59,7 +53,7 @@ pub fn recognize_blocking(image_data: &[u8], lang: &str) -> Result<OcrResult, Oc
         .arg("-c")
         .arg("tessedit_write_images=false")
         .output()
-        .map_err(|e| OcrError::CommandError(e))?;
+        .map_err(OcrError::CommandError)?;
 
     std::fs::remove_file(&temp_path).ok();
 
