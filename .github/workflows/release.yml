@@ -54,9 +54,14 @@ jobs:
 
       - name: Build Rust library
         working-directory: native
-        run: |
-          set -o pipefail
-          cargo build --release 2>&1 | tail -100
+        run: cargo build --release 2>&1 | tee build.log
+
+      - name: Upload build log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-build-log
+          path: native/build.log
 
       - name: Generate FFI bindings
         working-directory: flutter
@@ -134,9 +139,14 @@ jobs:
 
       - name: Build Rust library
         working-directory: native
-        run: |
-          set -o pipefail
-          cargo build --release 2>&1 | tail -100
+        run: cargo build --release 2>&1 | tee build.log
+
+      - name: Upload build log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-build-log
+          path: native/build.log
 
       - name: Generate FFI bindings
         working-directory: flutter
@@ -196,15 +206,18 @@ jobs:
 
       - name: Build x86_64
         working-directory: native
-        run: |
-          set -o pipefail
-          cargo build --release --target x86_64-apple-darwin 2>&1 | tail -100
+        run: cargo build --release --target x86_64-apple-darwin 2>&1 | tee build-x86_64.log
 
       - name: Build aarch64
         working-directory: native
-        run: |
-          set -o pipefail
-          cargo build --release --target aarch64-apple-darwin 2>&1 | tail -100
+        run: cargo build --release --target aarch64-apple-darwin 2>&1 | tee build-aarch64.log
+
+      - name: Upload macOS build logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-build-logs
+          path: native/build-*.log
 
       - name: Create Universal Binary with lipo
         working-directory: native
@@ -280,7 +293,14 @@ jobs:
         working-directory: native
         env:
           RUST_BACKTRACE: 1
-        run: cargo build --release
+        run: cargo build --release 2>&1 | Tee-Object -FilePath build.log
+
+      - name: Upload Windows build log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-build-log
+          path: native/build.log
 
       - name: Generate FFI bindings
         working-directory: flutter

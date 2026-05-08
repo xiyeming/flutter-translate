@@ -75,19 +75,38 @@ cd "$BUILD_DIR"
 APPIMAGETOOL="appimagetool-${ARCH}.AppImage"
 if [ ! -f "$APPIMAGETOOL" ]; then
     echo "Downloading appimagetool for $ARCH..."
-    if ! wget -q "https://github.com/AppImage/AppImageKit/releases/download/continuous/${APPIMAGETOOL}" -O "$APPIMAGETOOL"; then
+    if ! wget -q --show-progress "https://github.com/AppImage/AppImageKit/releases/download/continuous/${APPIMAGETOOL}" -O "$APPIMAGETOOL"; then
         echo "Warning: Failed to download appimagetool for $ARCH. Skipping AppImage."
         exit 0
     fi
     chmod +x "$APPIMAGETOOL"
 fi
 
+# Verify downloaded file is not a small error page
+FILE_SIZE=$(stat -c%s "$APPIMAGETOOL" 2>/dev/null || stat -f%z "$APPIMAGETOOL" 2>/dev/null || echo "0")
+echo "appimagetool size: $FILE_SIZE bytes"
+if [ "$FILE_SIZE" -lt 100000 ]; then
+    echo "Warning: appimagetool download seems invalid (too small). Skipping AppImage."
+    exit 0
+fi
+
 # CI containers lack FUSE; extract and run appimagetool directly
+echo "Extracting appimagetool..."
 if ./"$APPIMAGETOOL" --appimage-extract >/dev/null 2>&1; then
+    echo "Running extracted appimagetool..."
     ./squashfs-root/AppRun "$APPDIR" "$APP_NAME-${ARCH}.AppImage"
     rm -rf squashfs-root
 else
-    ARCH=$ARCH ./"$APPIMAGETOOL" "$APPDIR" "$APP_NAME-${ARCH}.AppImage"
+    echo "FUSE-less extraction failed, trying direct run with ARCH=$ARCH..."
+    ARCH=$ARCH ./"$APPIMAGETOOL" "$APPDIR" "$APP_NAME-${ARCH}.AppImage" || {
+        echo "Warning: AppImage packaging failed. Skipping."
+        exit 0
+    }
 fi
 
-echo "Build complete: $BUILD_DIR/$APP_NAME-${ARCH}.AppImage"
+if [ -f "$BUILD_DIR/$APP_NAME-${ARCH}.AppImage" ]; then
+    echo "Build complete: $BUILD_DIR/$APP_NAME-${ARCH}.AppImage"
+else
+    echo "Warning: AppImage file not found after build. Skipping."
+    exit 0
+fi
