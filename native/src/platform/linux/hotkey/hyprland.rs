@@ -76,17 +76,30 @@ impl HyprlandHotkeyService {
         self.binds.clear();
         let socket2 = Self::find_socket2().ok_or(HotkeyError::NoKeyboardDevices)?;
 
-        self.running.store(true, Ordering::SeqCst);
-        let running = self.running.clone();
-
-        // Build action map
+        // Register binds via Hyprland IPC socket (.socket.sock)
         let mut action_map: HashMap<String, String> = HashMap::new();
         for s in &shortcuts {
             if !s.enabled { continue; }
             let bind = Self::to_hypr_bind(&s.key_combination);
             if bind.is_empty() { continue; }
-            action_map.insert(bind, s.action.clone());
+            // Send "keyword bind MODS_KEY,exec,/bin/true" to register the hotkey
+            // Note: Hyprland IPC format: "keyword bind SUPER_ALT,F,exec,/bin/true" (no "=", mods joined by _)
+            let ipc_cmd = format!("keyword bind {},exec,/bin/true\n", bind);
+            if Self::send_ipc(&ipc_cmd) {
+                self.binds.push((bind.clone(), s.action.clone()));
+                action_map.insert(bind, s.action.clone());
+                tracing::info!("[hyprland] Registered bind: {}", s.key_combination);
+            } else {
+                tracing::warn!("[hyprland] Failed to register bind: {}", s.key_combination);
+            }
         }
+
+        if self.binds.is_empty() {
+            return Err(HotkeyError::NoKeyboardDevices);
+        }
+
+        self.running.store(true, Ordering::SeqCst);
+        let running = self.running.clone();
 
         let actions = Arc::new(action_map);
         tokio::task::spawn_blocking(move || {
@@ -137,6 +150,12 @@ impl HyprlandHotkeyService {
 
     pub fn unregister_all(&mut self) -> Result<(), HotkeyError> {
         self.running.store(false, Ordering::SeqCst);
+        // Unbind all registered hotkeys via IPC
+        for (bind, _) in &self.binds {
+            let ipc_cmd = format!("keyword unbind {}\n", bind);
+            let _ = Self::send_ipc(&ipc_cmd);
+            tracing::info!("[hyprland] Unregistered bind: {}", bind);
+        }
         self.binds.clear();
         Ok(())
     }
