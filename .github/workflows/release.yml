@@ -72,7 +72,7 @@ jobs:
 
       - name: Build Flutter Linux
         working-directory: flutter
-        run: flutter build linux --release
+        run: flutter build linux --release --verbose
 
       - name: Copy native library to bundle
         run: |
@@ -272,6 +272,8 @@ jobs:
 
       - name: Build Rust library
         working-directory: native
+        env:
+          RUST_BACKTRACE: 1
         run: cargo build --release
 
       - name: Generate FFI bindings
@@ -282,7 +284,7 @@ jobs:
 
       - name: Build Flutter Windows
         working-directory: flutter
-        run: flutter build windows --release
+        run: flutter build windows --release --verbose
 
       - name: Copy native library to bundle
         run: |
