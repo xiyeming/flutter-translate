@@ -17,6 +17,8 @@ class HotkeyService {
   }
 
   Timer? _pollTimer;
+  Timer? _watchdogTimer;
+  DateTime? _lastWatchdogTick;
   final _ffi = FfiDatasource();
 
   Future<void> registerAll() async {
@@ -78,11 +80,45 @@ class HotkeyService {
         debugPrint('[hotkey] poll error: $e');
       }
     });
+    _startWatchdog();
+  }
+
+  void _startWatchdog() {
+    _watchdogTimer?.cancel();
+    _lastWatchdogTick = DateTime.now();
+    _watchdogTimer = Timer.periodic(const Duration(minutes: 1), (_) async {
+      final now = DateTime.now();
+      final last = _lastWatchdogTick;
+      _lastWatchdogTick = now;
+      if (last == null) return;
+
+      final diff = now.difference(last);
+      // 如果两次 watchdog 间隔超过 3 分钟，说明系统可能从睡眠/锁屏中恢复
+      if (diff.inMinutes > 3) {
+        debugPrint('[hotkey] System resumed from sleep/lock (gap ${diff.inMinutes}m), re-registering hotkeys');
+        await _reRegister();
+      }
+    });
+  }
+
+  Future<void> _reRegister() async {
+    try {
+      final bindings = await _ffi.getShortcuts();
+      final enabled = bindings.where((b) => b.enabled).toList();
+      if (enabled.isEmpty) return;
+      await _ffi.unregisterHotkeys();
+      await _ffi.registerHotkeys(enabled);
+      debugPrint('[hotkey] Re-registered ${enabled.length} hotkeys after resume');
+    } catch (e) {
+      debugPrint('[hotkey] Re-register failed: $e');
+    }
   }
 
   void _stopPolling() {
     _pollTimer?.cancel();
     _pollTimer = null;
+    _watchdogTimer?.cancel();
+    _watchdogTimer = null;
   }
 
   void dispose() {
