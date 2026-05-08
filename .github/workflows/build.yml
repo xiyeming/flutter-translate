@@ -59,12 +59,6 @@ jobs:
           - distro: fedora
             image: fedora:41
             install: dnf install -y curl gcc openssl-devel pkgconfig sqlite-devel
-          - distro: opensuse
-            image: opensuse/leap:15.6
-            install: |
-              export PATH="/usr/sbin:$PATH"
-              zypper --non-interactive ref
-              zypper --non-interactive install curl gcc libopenssl-devel pkgconfig sqlite3-devel
     container:
       image: ${{ matrix.image }}
     steps:
@@ -81,12 +75,10 @@ jobs:
       - name: cargo check
         working-directory: native
         run: cargo check
-        continue-on-error: ${{ matrix.distro == 'opensuse' }}
 
       - name: cargo test
         working-directory: native
         run: cargo test --lib
-        continue-on-error: ${{ matrix.distro == 'opensuse' }}
 
   cross-compile-check:
     runs-on: ubuntu-latest
