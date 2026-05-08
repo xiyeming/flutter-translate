@@ -2,12 +2,19 @@
 
 set -e
 
-echo "=== Flutter Translate AppImage Builder ==="
-
+ARCH="${ARCH:-x86_64}"
 PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 APP_NAME="Waylex"
 BUILD_DIR="$PROJECT_DIR/build"
 APPDIR="$BUILD_DIR/AppDir"
+
+if [ "$ARCH" = "aarch64" ]; then
+    FLUTTER_BUILD_ARCH="arm64"
+else
+    FLUTTER_BUILD_ARCH="x64"
+fi
+
+echo "=== Waylex AppImage Builder ($ARCH) ==="
 
 echo "Cleaning previous build..."
 rm -rf "$BUILD_DIR"
@@ -15,12 +22,12 @@ mkdir -p "$APPDIR/usr/bin"
 mkdir -p "$APPDIR/usr/share/icons/hicolor/256x256/apps"
 mkdir -p "$APPDIR/usr/share/applications"
 
-echo "Building Flutter Linux app..."
+echo "Building Flutter Linux app ($FLUTTER_BUILD_ARCH)..."
 cd "$PROJECT_DIR/flutter"
 flutter build linux --release
 
 echo "Copying binaries..."
-cp -r "$PROJECT_DIR/flutter/build/linux/x64/release/bundle/"* "$APPDIR/usr/bin/"
+cp -r "$PROJECT_DIR/flutter/build/linux/$FLUTTER_BUILD_ARCH/release/bundle/"* "$APPDIR/usr/bin/"
 
 echo "Creating desktop entry..."
 cat > "$APPDIR/usr/share/applications/$APP_NAME.desktop" << EOF
@@ -46,7 +53,6 @@ EOF
 chmod +x "$APPDIR/AppRun"
 
 echo "Copying icon..."
-# Generate a placeholder icon if none exists
 ICON_PATH="$PROJECT_DIR/flutter/assets/icons/tray_icon.png"
 if [ ! -f "$ICON_PATH" ]; then
     echo "Warning: No icon found, skipping icon copy"
@@ -55,16 +61,16 @@ else
     cp "$ICON_PATH" "$APPDIR/$APP_NAME.png"
 fi
 
-echo "Packaging AppImage..."
+echo "Packaging AppImage ($ARCH)..."
 cd "$BUILD_DIR"
 
-# Download appimagetool if not present
-if [ ! -f appimagetool-x86_64.AppImage ]; then
-    echo "Downloading appimagetool..."
-    wget -q "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage" -O appimagetool-x86_64.AppImage
-    chmod +x appimagetool-x86_64.AppImage
+APPIMAGETOOL="appimagetool-${ARCH}.AppImage"
+if [ ! -f "$APPIMAGETOOL" ]; then
+    echo "Downloading appimagetool for $ARCH..."
+    wget -q "https://github.com/AppImage/AppImageKit/releases/download/continuous/${APPIMAGETOOL}" -O "$APPIMAGETOOL"
+    chmod +x "$APPIMAGETOOL"
 fi
 
-ARCH=x86_64 ./appimagetool-x86_64.AppImage "$APPDIR" "$APP_NAME-x86_64.AppImage"
+ARCH=$ARCH ./"$APPIMAGETOOL" "$APPDIR" "$APP_NAME-${ARCH}.AppImage"
 
-echo "Build complete: $BUILD_DIR/$APP_NAME-x86_64.AppImage"
+echo "Build complete: $BUILD_DIR/$APP_NAME-${ARCH}.AppImage"

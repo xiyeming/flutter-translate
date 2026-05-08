@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>com.xym.ft.Waylex</id>
+  <name>Waylex</name>
+  <summary>AI-powered translation tool for Linux desktop</summary>
+  <description>
+    <p>Waylex is an AI-driven translation tool for Linux Wayland desktops.</p>
+    <p>Features:</p>
+    <ul>
+      <li>Global hotkey-triggered translation</li>
+      <li>Screenshot OCR with automatic translation</li>
+      <li>Support for 10+ translation providers</li>
+      <li>System tray integration</li>
+      <li>Multi-provider comparison</li>
+    </ul>
+  </description>
+  <url type="homepage">https://github.com/xiyeming/Waylex</url>
+  <url type="bugtracker">https://github.com/xiyeming/Waylex/issues</url>
+  <developer_name>XiYeMing</developer_name>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <content_rating type="oars-1.1" />
+  <releases>
+    <release version="1.2.0" date="2026-05-08" />
+  </releases>
+</component>

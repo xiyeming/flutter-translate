@@ -70,14 +70,9 @@ jobs:
           cargo install flutter_rust_bridge_codegen
           flutter_rust_bridge_codegen generate
 
-      - name: Flutter doctor
-        working-directory: flutter
-        run: flutter doctor -v
-
       - name: Build Flutter Linux
         working-directory: flutter
-        run: flutter build linux --release --verbose
-        continue-on-error: true
+        run: flutter build linux --release
 
       - name: Copy native library to bundle
         run: |
@@ -99,13 +94,98 @@ jobs:
           mv build/Waylex-x86_64.AppImage build/Waylex-linux-x86_64.AppImage || true
           mv build/flutter-translate-x86_64.AppImage build/Waylex-linux-x86_64.AppImage || true
 
-      - name: Upload Linux artifacts
+      - name: Upload Linux x86_64 artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: linux-artifacts
+          name: linux-x64-artifacts
           path: |
             build/*.AppImage
             flutter/build/linux/x64/release/waylex-linux-x64.tar.gz
+
+      - name: Upload bundle for Flatpak
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-bundle-flatpak
+          path: flutter/build/linux/x64/release/bundle/
+
+  build-linux-aarch64:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.41.x'
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            ninja-build libgtk-3-dev libblkid-dev liblzma-dev \
+            libssl-dev pkg-config libsqlite3-dev
+
+      - name: Enable Linux desktop
+        working-directory: flutter
+        run: flutter config --enable-linux-desktop
+
+      - name: Get Flutter dependencies
+        working-directory: flutter
+        run: flutter pub get
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            native/target
+          key: ${{ runner.os }}-arm64-cargo-${{ hashFiles('native/Cargo.lock') }}
+
+      - name: Build Rust library
+        working-directory: native
+        run: cargo build --release
+
+      - name: Generate FFI bindings
+        working-directory: flutter
+        run: |
+          cargo install flutter_rust_bridge_codegen
+          flutter_rust_bridge_codegen generate
+
+      - name: Build Flutter Linux (aarch64)
+        working-directory: flutter
+        run: flutter build linux --release
+
+      - name: Copy native library to bundle
+        run: |
+          mkdir -p flutter/build/linux/arm64/release/bundle/lib
+          cp native/target/release/libflutter_translate_native.so flutter/build/linux/arm64/release/bundle/lib/
+
+      - name: Package portable tarball
+        run: |
+          cd flutter/build/linux/arm64/release
+          tar czf waylex-linux-aarch64.tar.gz bundle/
+
+      - name: Build AppImage (aarch64)
+        run: |
+          sudo apt-get install -y wget
+          ARCH=aarch64 ./scripts/package_appimage.sh
+
+      - name: Rename AppImage
+        run: |
+          mv build/Waylex-aarch64.AppImage build/Waylex-linux-aarch64.AppImage || true
+
+      - name: Upload Linux aarch64 artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-aarch64-artifacts
+          path: |
+            build/*.AppImage
+            flutter/build/linux/arm64/release/waylex-linux-aarch64.tar.gz
 
   build-macos:
     runs-on: macos-latest
@@ -159,20 +239,134 @@ jobs:
           name: macos-artifacts
           path: native/waylex-macos-universal.tar.gz
 
-  release:
-    needs: [build-linux, build-macos]
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.41.x'
+
+      - name: Enable Windows desktop
+        working-directory: flutter
+        run: flutter config --enable-windows-desktop
+
+      - name: Get Flutter dependencies
+        working-directory: flutter
+        run: flutter pub get
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            native/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('native/Cargo.lock') }}
+
+      - name: Build Rust library
+        working-directory: native
+        run: cargo build --release
+
+      - name: Generate FFI bindings
+        working-directory: flutter
+        run: |
+          cargo install flutter_rust_bridge_codegen
+          flutter_rust_bridge_codegen generate
+
+      - name: Build Flutter Windows
+        working-directory: flutter
+        run: flutter build windows --release
+
+      - name: Copy native library to bundle
+        run: |
+          Copy-Item -Path "native\target\release\flutter_translate_native.dll" -Destination "flutter\build\windows\x64\release\runner\Release\" -Force
+
+      - name: Package Windows zip
+        working-directory: flutter\build\windows\x64\release\runner
+        run: |
+          Compress-Archive -Path "Release" -DestinationPath "waylex-windows-x64.zip"
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-artifacts
+          path: flutter/build/windows/x64/release/runner/waylex-windows-x64.zip
+
+  build-flatpak:
+    needs: [build-linux]
     runs-on: ubuntu-latest
     steps:
-      - name: Download Linux artifacts
+      - uses: actions/checkout@v4
+
+      - name: Download Linux bundle
         uses: actions/download-artifact@v4
         with:
-          name: linux-artifacts
+          name: linux-bundle-flatpak
+          path: bundle/
+
+      - name: Install Flatpak tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flatpak flatpak-builder
+          sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+
+      - name: Install Flatpak runtime
+        run: |
+          sudo flatpak install -y flathub org.freedesktop.Platform//24.08 org.freedesktop.Sdk//24.08
+
+      - name: Build Flatpak
+        run: |
+          cd flatpak
+          # Repackage bundle as tarball for manifest source
+          tar czf waylex-linux-bundle.tar.gz -C ../bundle .
+          sudo flatpak-builder --force-clean --repo=../repo build-dir com.xym.ft.Waylex.yaml
+          flatpak build-bundle ../repo ../Waylex.flatpak com.xym.ft.Waylex --runtime-repo=https://flathub.org/repo/flathub.flatpakrepo
+
+      - name: Upload Flatpak artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: flatpak-artifact
+          path: Waylex.flatpak
+
+  release:
+    needs: [build-linux, build-linux-aarch64, build-macos, build-windows, build-flatpak]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Linux x86_64 artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-x64-artifacts
+          path: artifacts/
+
+      - name: Download Linux aarch64 artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-aarch64-artifacts
           path: artifacts/
 
       - name: Download macOS artifacts
         uses: actions/download-artifact@v4
         with:
           name: macos-artifacts
+          path: artifacts/
+
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-artifacts
+          path: artifacts/
+
+      - name: Download Flatpak artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: flatpak-artifact
           path: artifacts/
 
       - name: List artifacts

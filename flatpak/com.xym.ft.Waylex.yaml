@@ -1,0 +1,38 @@
+app-id: com.xym.ft.Waylex
+runtime: org.freedesktop.Platform
+runtime-version: '24.08'
+sdk: org.freedesktop.Sdk
+command: Waylex
+
+finish-args:
+  - --share=ipc
+  - --socket=fallback-x11
+  - --socket=wayland
+  - --device=dri
+  - --socket=pulseaudio
+  - --talk-name=org.kde.StatusNotifierWatcher
+  - --talk-name=org.freedesktop.secrets
+  - --filesystem=xdg-config
+  - --filesystem=xdg-download
+
+modules:
+  - name: waylex
+    buildsystem: simple
+    build-commands:
+      - install -Dm755 Waylex /app/bin/Waylex
+      - cp -r lib /app/bin/
+      - cp -r data /app/bin/
+      - install -Dm644 com.xym.ft.Waylex.png /app/share/icons/hicolor/256x256/apps/com.xym.ft.Waylex.png
+      - install -Dm644 com.xym.ft.Waylex.desktop /app/share/applications/com.xym.ft.Waylex.desktop
+      - install -Dm644 com.xym.ft.Waylex.metainfo.xml /app/share/metainfo/com.xym.ft.Waylex.metainfo.xml
+    sources:
+      - type: archive
+        path: waylex-linux-bundle.tar.gz
+        dest: .
+      - type: file
+        path: com.xym.ft.Waylex.desktop
+      - type: file
+        path: ../flutter/assets/icons/tray_icon.png
+        dest-filename: com.xym.ft.Waylex.png
+      - type: file
+        path: com.xym.ft.Waylex.metainfo.xml
