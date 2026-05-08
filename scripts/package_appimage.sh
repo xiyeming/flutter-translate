@@ -74,6 +74,12 @@ if [ ! -f "$APPIMAGETOOL" ]; then
     chmod +x "$APPIMAGETOOL"
 fi
 
-ARCH=$ARCH ./"$APPIMAGETOOL" "$APPDIR" "$APP_NAME-${ARCH}.AppImage"
+# CI containers lack FUSE; extract and run appimagetool directly
+if ./"$APPIMAGETOOL" --appimage-extract >/dev/null 2>&1; then
+    ./squashfs-root/AppRun "$APPDIR" "$APP_NAME-${ARCH}.AppImage"
+    rm -rf squashfs-root
+else
+    ARCH=$ARCH ./"$APPIMAGETOOL" "$APPDIR" "$APP_NAME-${ARCH}.AppImage"
+fi
 
 echo "Build complete: $BUILD_DIR/$APP_NAME-${ARCH}.AppImage"

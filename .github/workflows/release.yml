@@ -192,11 +192,15 @@ jobs:
 
       - name: Build x86_64
         working-directory: native
-        run: cargo build --release --target x86_64-apple-darwin 2>&1 | tail -100
+        run: |
+          set -o pipefail
+          cargo build --release --target x86_64-apple-darwin 2>&1 | tail -100
 
       - name: Build aarch64
         working-directory: native
-        run: cargo build --release --target aarch64-apple-darwin 2>&1 | tail -100
+        run: |
+          set -o pipefail
+          cargo build --release --target aarch64-apple-darwin 2>&1 | tail -100
 
       - name: Create Universal Binary with lipo
         working-directory: native
@@ -243,6 +247,10 @@ jobs:
         with:
           channel: stable
           flutter-version: '3.41.x'
+
+      - name: Add Windows desktop support
+        working-directory: flutter
+        run: flutter create --platforms=windows .
 
       - name: Enable Windows desktop
         working-directory: flutter
