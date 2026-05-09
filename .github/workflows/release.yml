@@ -90,6 +90,11 @@ jobs:
           for lib in libayatana-appindicator3.so.1 libayatana-ido3-0.4.so.0 libayatana-indicator3.so.7 libdbusmenu-glib.so.4 libdbusmenu-gtk3.so.4; do
             if [ -f "/usr/lib/x86_64-linux-gnu/$lib" ]; then cp -L "/usr/lib/x86_64-linux-gnu/$lib" flutter/build/linux/x64/release/bundle/lib/; elif [ -f "/usr/lib/$lib" ]; then cp -L "/usr/lib/$lib" flutter/build/linux/x64/release/bundle/lib/; fi
           done
+          echo "=== Bundle lib directory after system lib copy ==="
+          ls -la flutter/build/linux/x64/release/bundle/lib/
+          echo "=== File types in bundle lib ==="
+          file flutter/build/linux/x64/release/bundle/lib/libayatana* || true
+          file flutter/build/linux/x64/release/bundle/lib/libdbusmenu* || true
 
       - name: Package portable tarball
         run: |
@@ -188,6 +193,11 @@ jobs:
           for lib in libayatana-appindicator3.so.1 libayatana-ido3-0.4.so.0 libayatana-indicator3.so.7 libdbusmenu-glib.so.4 libdbusmenu-gtk3.so.4; do
             if [ -f "/usr/lib/aarch64-linux-gnu/$lib" ]; then cp -L "/usr/lib/aarch64-linux-gnu/$lib" flutter/build/linux/arm64/release/bundle/lib/; elif [ -f "/usr/lib/$lib" ]; then cp -L "/usr/lib/$lib" flutter/build/linux/arm64/release/bundle/lib/; fi
           done
+          echo "=== Bundle lib directory after system lib copy ==="
+          ls -la flutter/build/linux/arm64/release/bundle/lib/
+          echo "=== File types in bundle lib ==="
+          file flutter/build/linux/arm64/release/bundle/lib/libayatana* || true
+          file flutter/build/linux/arm64/release/bundle/lib/libdbusmenu* || true
 
       - name: Package portable tarball
         run: |
@@ -458,8 +468,16 @@ jobs:
         run: |
           cd flatpak
           # Repackage bundle as tarball for manifest source
+          echo "=== Contents of downloaded bundle ==="
+          find ../bundle -name "*.so*" | sort
+          echo "=== Packaging tarball ==="
           tar czf waylex-linux-bundle.tar.gz -C ../bundle .
+          echo "=== Tarball lib contents ==="
+          tar tzf waylex-linux-bundle.tar.gz | grep "lib/" | sort
+          echo "=== Building Flatpak ==="
           sudo flatpak-builder --force-clean --repo=../repo build-dir com.xym.ft.Waylex.yaml
+          echo "=== Checking /app/lib in build-dir ==="
+          find build-dir -path "*/app/lib/libayatana*" -o -path "*/app/lib/libdbusmenu*" | sort || true
           flatpak build-bundle ../repo ../Waylex.flatpak com.xym.ft.Waylex --runtime-repo=https://flathub.org/repo/flathub.flatpakrepo
 
       - name: Upload Flatpak artifact

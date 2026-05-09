@@ -28,8 +28,20 @@ modules:
       - cp -r data /app/bin/
       - cp -r lib /app/bin/
       - |
+        # Copy all bundled shared libraries to /app/lib
         for f in lib/*.so*; do
-          install -Dm755 "$f" "/app/lib/$(basename $f)"
+          if [ -f "$f" ]; then
+            install -Dm755 "$f" "/app/lib/$(basename $f)"
+          fi
+        done
+      - |
+        # Verify critical tray_manager dependencies are present
+        for lib in libayatana-appindicator3.so.1 libayatana-ido3-0.4.so.0 libayatana-indicator3.so.7 libdbusmenu-glib.so.4 libdbusmenu-gtk3.so.4; do
+          if [ ! -f "/app/lib/$lib" ]; then
+            echo "ERROR: Missing required library /app/lib/$lib"
+            ls -la /app/lib/ || true
+            exit 1
+          fi
         done
       - install -Dm644 com.xym.ft.Waylex.png /app/share/icons/hicolor/256x256/apps/com.xym.ft.Waylex.png
       - install -Dm644 com.xym.ft.Waylex.desktop /app/share/applications/com.xym.ft.Waylex.desktop
