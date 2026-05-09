@@ -20,7 +20,9 @@ echo "Cleaning previous build..."
 rm -rf "$BUILD_DIR"
 mkdir -p "$APPDIR/usr/bin"
 mkdir -p "$APPDIR/usr/share/icons/hicolor/256x256/apps"
+mkdir -p "$APPDIR/usr/share/icons/hicolor/48x48/apps"
 mkdir -p "$APPDIR/usr/share/applications"
+mkdir -p "$APPDIR/usr/share/metainfo"
 
 echo "Building Flutter Linux app ($FLUTTER_BUILD_ARCH)..."
 cd "$PROJECT_DIR/flutter"
@@ -34,6 +36,16 @@ echo "Bundle dir: $BUNDLE_DIR"
 ls -la "$BUNDLE_DIR/" || true
 ls -la "$BUNDLE_DIR/lib/" || true
 
+# Copy native Rust library into bundle before packaging
+NATIVE_SO="$PROJECT_DIR/native/target/release/libflutter_translate_native.so"
+if [ -f "$NATIVE_SO" ]; then
+    echo "Copying native Rust library..."
+    mkdir -p "$BUNDLE_DIR/lib"
+    cp "$NATIVE_SO" "$BUNDLE_DIR/lib/"
+else
+    echo "Warning: Native library not found at $NATIVE_SO"
+fi
+
 echo "Copying binaries..."
 cp -r "$BUNDLE_DIR/"* "$APPDIR/usr/bin/"
 
@@ -44,6 +56,7 @@ Name=Waylex
 Comment=AI Translation Desktop Tool
 Exec=$APP_NAME
 Icon=$APP_NAME
+StartupWMClass=com.xym.ft.Waylex
 Type=Application
 Categories=Utility;Translation;
 StartupNotify=true
@@ -64,12 +77,19 @@ EOF
 chmod +x "$APPDIR/AppRun"
 
 echo "Copying icon..."
-ICON_PATH="$PROJECT_DIR/flutter/assets/icons/tray_icon.png"
-if [ ! -f "$ICON_PATH" ]; then
-    echo "Warning: No icon found, skipping icon copy"
+# Prefer 256x256 icon if available (for correct hicolor sizing), fallback to 48x48 tray icon
+ICON_256="$PROJECT_DIR/flatpak/com.xym.ft.Waylex.png"
+ICON_48="$PROJECT_DIR/flutter/assets/icons/tray_icon.png"
+if [ -f "$ICON_256" ]; then
+    cp "$ICON_256" "$APPDIR/usr/share/icons/hicolor/256x256/apps/$APP_NAME.png"
+    cp "$ICON_256" "$APPDIR/$APP_NAME.png"
+    echo "Using 256x256 icon"
+elif [ -f "$ICON_48" ]; then
+    cp "$ICON_48" "$APPDIR/usr/share/icons/hicolor/48x48/apps/$APP_NAME.png"
+    cp "$ICON_48" "$APPDIR/$APP_NAME.png"
+    echo "Using 48x48 icon (installing to hicolor/48x48)"
 else
-    cp "$ICON_PATH" "$APPDIR/usr/share/icons/hicolor/256x256/apps/$APP_NAME.png"
-    cp "$ICON_PATH" "$APPDIR/$APP_NAME.png"
+    echo "Warning: No icon found, skipping icon copy"
 fi
 
 echo "Packaging AppImage ($ARCH)..."
