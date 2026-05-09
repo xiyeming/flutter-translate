@@ -68,7 +68,9 @@ void main() async {
 Future<void> _initTray() async {
   try {
     await trayManager.setIcon(
-      'assets/icons/tray_icon.png',
+      (Platform.isLinux && Platform.environment.containsKey('FLATPAK_ID'))
+          ? 'com.xym.ft.Waylex'
+          : 'assets/icons/tray_icon.png',
     );
 
     final menu = Menu(items: [
