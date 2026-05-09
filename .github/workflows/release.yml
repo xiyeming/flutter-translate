@@ -82,6 +82,11 @@ jobs:
         working-directory: flutter
         run: flutter build linux --release --verbose
 
+      - name: Build AppImage
+        run: |
+          sudo apt-get install -y wget
+          ./scripts/package_appimage.sh
+
       - name: Copy native library to bundle
         run: |
           mkdir -p flutter/build/linux/x64/release/bundle/lib
@@ -100,11 +105,6 @@ jobs:
         run: |
           cd flutter/build/linux/x64/release
           tar czf waylex-linux-x64.tar.gz bundle/
-
-      - name: Build AppImage
-        run: |
-          sudo apt-get install -y wget
-          ./scripts/package_appimage.sh
 
       - name: Rename AppImage
         run: |
@@ -186,6 +186,11 @@ jobs:
         working-directory: flutter
         run: flutter build linux --release --verbose
 
+      - name: Build AppImage (aarch64)
+        run: |
+          sudo apt-get install -y wget
+          ARCH=aarch64 ./scripts/package_appimage.sh
+
       - name: Copy native library to bundle
         run: |
           mkdir -p flutter/build/linux/arm64/release/bundle/lib
@@ -203,11 +208,6 @@ jobs:
         run: |
           cd flutter/build/linux/arm64/release
           tar czf waylex-linux-aarch64.tar.gz bundle/
-
-      - name: Build AppImage (aarch64)
-        run: |
-          sudo apt-get install -y wget
-          ARCH=aarch64 ./scripts/package_appimage.sh
 
       - name: Rename AppImage
         run: |
